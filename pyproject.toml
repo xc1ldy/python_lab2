@@ -7,20 +7,20 @@ name = "streamstats"
 version = "0.1.0"
 description = "Потоковый анализатор файлов событий"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14.7"
 dependencies = [
-    "typer>=0.12",
-    "pydantic>=2",
+    "typer>=0.27.3",
+    "pydantic>=2.14.1",
 ]
 
 [project.scripts]
-stramstats = "streamstats.__main__:app"
+streamstats = "streamstats.__main__:app"
 
-[dependence-groups]
+[dependency-groups]
 dev = [
-    "pytest>=8.4.2",
-    "ruff",
-    "mypy",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+    "mypy>=2.4.0",
     "pre-commit",
 ]
 
@@ -42,7 +42,7 @@ select = ["E", "F", "W", "I", "UP", "B"]
 convention = "pep257"
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.14.7"
 strict = true
 mypy_path = "src"
 plugins = ["pydantic.mypy"]

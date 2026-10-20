@@ -2,6 +2,10 @@ class StreamStatsError(Exception):
     """Main error"""
 
 
+class EmptyFileError(StreamStatsError):
+    """Empty file error"""
+
+
 class UnsupportedFormatError(StreamStatsError):
     """Invalid format"""
 
