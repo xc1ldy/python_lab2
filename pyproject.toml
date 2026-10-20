@@ -1,8 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "labs"
+name = "streamstats"
 version = "0.1.0"
-description = "Add your description here"
+description = "Потоковый анализатор файлов событий"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pytest>=8.4.2",
+    "typer>=0.12",
+    "pydantic>=2",
 ]
+
+[project.scripts]
+stramstats = "streamstats.__main__:app"
+
+[dependence-groups]
+dev = [
+    "pytest>=8.4.2",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/streamstats"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+mypy_path = "src"
+plugins = ["pydantic.mypy"]

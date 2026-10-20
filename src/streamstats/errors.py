@@ -10,7 +10,7 @@ class InvalidEventError(StreamStatsError):
     """Invalid event"""
 
 
-class InvalidTimestampError(StreamStatsError):
+class InvalidTimestampError(InvalidEventError):
     """Invalid time format"""
 
 
