@@ -31,8 +31,8 @@ def build_report(stats: StreamStats) -> dict[str, object]:
         "by_level": {level.value: stats.by_level[level] for level in Level},
         "by_source": dict(by_source),
         "top_error_sources": [
-            {"source": source, "count": count}
-            for source, count in stats.top_error_sources()
+            {"source": item.source, "count": item.total, "critical": item.critical}
+            for item in stats.top_error_sources()
         ],
         "first_timestamp": _format_timestamp(stats.first_timestamp),
         "last_timestamp": _format_timestamp(stats.last_timestamp),

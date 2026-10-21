@@ -42,7 +42,7 @@ select = ["E", "F", "W", "I", "UP", "B"]
 convention = "pep257"
 
 [tool.mypy]
-python_version = "3.14.7"
+python_version = "3.14"
 strict = true
 mypy_path = "src"
 plugins = ["pydantic.mypy"]

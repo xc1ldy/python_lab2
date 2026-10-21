@@ -4,6 +4,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import NamedTuple
 
 from streamstats.errors import CLIConfigError, InvalidEventError
 from streamstats.models import Event, Level
@@ -15,6 +16,14 @@ ERROR_LEVELS = frozenset({Level.ERROR, Level.CRITICAL})
 TOP_ERROR_SOURCES = 5
 
 
+class ErrorSource(NamedTuple):
+    """Источник ошибки ERROR или CRITICAL и количество CRITICAL"""
+
+    source: str
+    total: int
+    critical: int
+
+
 @dataclass
 class StreamStats:
     """Один объект накапливает статистику по всем событиям"""
@@ -23,6 +32,7 @@ class StreamStats:
     by_level: Counter[Level] = field(default_factory=Counter)
     by_source: Counter[str] = field(default_factory=Counter)
     error_sources: Counter[str] = field(default_factory=Counter)
+    critical_sources: Counter[str] = field(default_factory=Counter)
     first_timestamp: datetime | None = None
     last_timestamp: datetime | None = None
     skipped_lines: int = 0
@@ -40,6 +50,8 @@ class StreamStats:
         self.by_source[event.source] += 1
         if event.level in ERROR_LEVELS:
             self.error_sources[event.source] += 1
+            if event.level == Level.CRITICAL:
+                self.critical_sources[event.source] += 1
         if self.first_timestamp is None or event.timestamp < self.first_timestamp:
             self.first_timestamp = event.timestamp
         if self.last_timestamp is None or event.timestamp > self.last_timestamp:
@@ -65,9 +77,7 @@ class StreamStats:
         """
         self.skipped_lines += 1
 
-    def top_error_sources(
-        self, limit: int = TOP_ERROR_SOURCES
-    ) -> list[tuple[str, int]]:
+    def top_error_sources(self, limit: int = TOP_ERROR_SOURCES) -> list[ErrorSource]:
         """
         Топ источников ERROR/CRITICAL
         Args:
@@ -75,8 +85,12 @@ class StreamStats:
         Raises: None
         Returns: топ источников
         """
+        sources = (
+            ErrorSource(source, count, self.critical_sources[source])
+            for source, count in self.error_sources.items()
+        )
         ranked = sorted(
-            self.error_sources.items(), key=lambda item: (-item[1], item[0])
+            sources, key=lambda item: (-item.critical, -item.total, item.source)
         )
         return ranked[:limit]
 
