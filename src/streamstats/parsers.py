@@ -16,7 +16,7 @@ from streamstats.models import Event
 OnError = Callable[[InvalidEventError], None]
 ParserFunc = Callable[[Path, OnError | None], Iterator[Event]]
 
-ENCODING = "utf-8-sig"
+ENCODING = "utf-8"
 REQUIRED_COLUMNS = ("timestamp", "level", "source", "message")
 
 def _describe(exc: ValidationError) -> str:
@@ -59,7 +59,7 @@ def _read_header(row: list[str], path: Path, line_no: int) -> list[str]:
     header = [name.strip() for name in row]
     missing = [name for name in REQUIRED_COLUMNS if name not in header]
     if missing:
-        message = f"{path}:{line_no}: missing collumns {', '.join(missing)}"
+        message = f"{path}:{line_no}: missing columns {', '.join(missing)}"
         raise InvalidEventError(message)
     return header
 
@@ -110,7 +110,7 @@ def parse_csv(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
                     raise
                 on_error(exc)
                 continue
-                yield event
+            yield event
         if header is None:
             raise EmptyFileError(f"{path}: file is empty")
 
