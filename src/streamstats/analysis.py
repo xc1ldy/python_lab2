@@ -38,7 +38,9 @@ class StreamStats:
         self.skipped_lines += 1
 
     def top_error_sources(
-            self, limit: int = TOP_ERROR_SOURCES
+        self, limit: int = TOP_ERROR_SOURCES
     ) -> list[tuple[str, int]]:
-        ranked = sorted(self.error_sources.items(), key=lambda item: (item[1], item[0]))
+        ranked = sorted(
+            self.error_sources.items(), key=lambda item: (-item[1], item[0])
+        )
         return ranked[:limit]

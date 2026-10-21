@@ -19,6 +19,7 @@ ParserFunc = Callable[[Path, OnError | None], Iterator[Event]]
 ENCODING = "utf-8"
 REQUIRED_COLUMNS = ("timestamp", "level", "source", "message")
 
+
 def _describe(exc: ValidationError) -> str:
     parts: list[str] = []
     for error in exc.errors():
@@ -65,7 +66,7 @@ def _read_header(row: list[str], path: Path, line_no: int) -> list[str]:
 
 
 def _parse_csv_row(
-        row: list[str], header: list[str], path: Path, line_no: int
+    row: list[str], header: list[str], path: Path, line_no: int
 ) -> Event:
     if len(row) != len(header):
         message = f"{path}:{line_no}: expected {len(header)} fields, got {len(row)}"
@@ -75,7 +76,7 @@ def _parse_csv_row(
 
 def _parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
     has_content = False
-    with (path.open(encoding=ENCODING) as file):
+    with path.open(encoding=ENCODING) as file:
         for line_no, line in enumerate(file, start=1):
             if not line.strip():
                 continue
