@@ -1,9 +1,15 @@
+import logging
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
+from streamstats.errors import CLIConfigError, InvalidEventError
 from streamstats.models import Event, Level
+from streamstats.parsers import get_parser
+
+logger = logging.getLogger(__name__)
 
 ERROR_LEVELS = frozenset({Level.ERROR, Level.CRITICAL})
 TOP_ERROR_SOURCES = 5
@@ -73,3 +79,34 @@ class StreamStats:
             self.error_sources.items(), key=lambda item: (-item[1], item[0])
         )
         return ranked[:limit]
+
+
+def analyze_files(
+    paths: Sequence[Path], fmt: str, *, skip_invalid: bool = False
+) -> StreamStats:
+    """
+     Прочитать все файлы и получить общую статистику
+     Args:
+         paths: пути к файлам
+         fmt: формат (один для всех файлов)
+         skip_invalid: пропускать пустые строки или нет
+    Raises: описывает ошибку в зависимости от того с какой ошибкой падает
+    Returns: статистику
+    """
+    parser = get_parser(fmt)
+    stats = StreamStats()
+
+    def skip(error: InvalidEventError) -> None:
+        logger.warning("Skipping invalid line: %s", error)
+        stats.record_skipped()
+
+    on_error = skip if skip_invalid else None
+    for path in paths:
+        try:
+            stats.consume(parser(path, on_error))
+        except UnicodeDecodeError as exc:
+            raise InvalidEventError(f"{path}: file is not valid UTF-8") from exc
+        except OSError as exc:
+            message = f"{path}: {exc.strerror or type(exc).__name__}"
+            raise CLIConfigError(message) from exc
+    return stats
