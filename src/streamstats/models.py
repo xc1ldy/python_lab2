@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator
 
 
 class Level(StrEnum):
+    """Допустимые уровни важности события"""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -14,6 +16,8 @@ class Level(StrEnum):
 
 
 class Event(BaseModel):
+    """Одно событие"""
+
     model_config = ConfigDict(frozen=True)
 
     timestamp: datetime
@@ -24,6 +28,13 @@ class Event(BaseModel):
     @field_validator("timestamp", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: object) -> datetime:
+        """
+        Форматирование строки ISO 8601 к UTC
+        Args:
+            value: не форматированное время
+        Raises: ошибка если value не str
+        Returns: время в формате datetime
+        """
         if not isinstance(value, str):
             raise ValueError("Timestamp must be an ISO 8601 string")
         parsed = datetime.fromisoformat(value)

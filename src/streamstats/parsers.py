@@ -21,6 +21,12 @@ REQUIRED_COLUMNS = ("timestamp", "level", "source", "message")
 
 
 def _describe(exc: ValidationError) -> str:
+    """
+    Создание описания ошибок pydantic
+    Args:
+        exc: входящие ошибки
+    Returns: описание ошибок
+    """
     parts: list[str] = []
     for error in exc.errors():
         field = ".".join(str(item) for item in error["loc"]) or "event"
@@ -29,6 +35,16 @@ def _describe(exc: ValidationError) -> str:
 
 
 def _validate_event(raw: object, path: Path, line_no: int) -> Event:
+    """
+    Валидация события
+    Args:
+        raw: событие
+        path: путь к файлу
+        line_no: номер строки
+    Raises: ошибка формата времени, если он не соблюден,
+            в остальных случая ошибка формата события
+    Returns: валидированное событие
+    """
     try:
         return Event.model_validate(raw)
     except ValidationError as exc:
@@ -42,6 +58,15 @@ def _validate_event(raw: object, path: Path, line_no: int) -> Event:
 
 
 def _parse_jsonl_line(line: str, path: Path, line_no: int) -> Event:
+    """
+    Парс одной непустой строки jsonl
+    Args:
+        line: строка jsonl
+        path: путь к файлу
+        line_no: номер строки
+    Raises: если падает, то ошибка формата события
+    Returns: валидированное событие
+    """
     try:
         raw = json.loads(line)
     except json.JSONDecodeError as exc:
@@ -51,12 +76,27 @@ def _parse_jsonl_line(line: str, path: Path, line_no: int) -> Event:
 
 
 def _is_blank_row(row: list[str]) -> bool:
+    """
+    Проверка пустой строки
+    Args:
+        row: строка для проверки
+    Returns: True если пустая строка, False иначе
+    """
     if not row:
         return True
     return len(row) == 1 and not row[0].strip()
 
 
 def _read_header(row: list[str], path: Path, line_no: int) -> list[str]:
+    """
+    Валидация заголовка csv
+    Args:
+        row: строка
+        path: путь к файлу
+        line_no: номер строки
+    Raises: если в заголовке отсутствуют нужные колонки, то ошибка формата события
+    Returns: заголовок
+    """
     header = [name.strip() for name in row]
     missing = [name for name in REQUIRED_COLUMNS if name not in header]
     if missing:
@@ -68,6 +108,16 @@ def _read_header(row: list[str], path: Path, line_no: int) -> list[str]:
 def _parse_csv_row(
     row: list[str], header: list[str], path: Path, line_no: int
 ) -> Event:
+    """
+    Парс непустой строки csv
+    Args:
+        row: строка
+        header: заголовок
+        path: путь к файлу
+        line_no: номер строки
+    Raises: если длина некорректна, то ошибка формата события
+    Returns: валидированное событие
+    """
     if len(row) != len(header):
         message = f"{path}:{line_no}: expected {len(header)} fields, got {len(row)}"
         raise InvalidEventError(message)
@@ -75,6 +125,16 @@ def _parse_csv_row(
 
 
 def _parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
+    """
+    Лениво читать события jsonl
+    Args:
+        path: путь к файлу
+        on_error:
+        без on_error - встречаем ошибочную строку -> падает с ошибкой формата события
+        c on_error - запоминаем ошибку, читаем дальше
+    Raises: файл без непустых строк падает с ошибкой пустого файла
+    Returns: список событий
+    """
     has_content = False
     with path.open(encoding=ENCODING) as file:
         for line_no, line in enumerate(file, start=1):
@@ -94,6 +154,17 @@ def _parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]
 
 
 def parse_csv(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
+    """
+    Лениво читать события csv
+    Args:
+        path: путь к файлу
+        on_error:
+        без on_error - встречаем ошибочную строку -> падает с ошибкой формата события
+        c on_error - запоминаем ошибку, читаем дальше
+    Raises: ошибка заголовка не пропускается даже с on_error,
+            падает с ошибкой пустого файла
+    Returns: список событий
+    """
     header: list[str] | None = None
     with path.open(encoding=ENCODING, newline="") as file:
         reader = csv.reader(file)
@@ -120,6 +191,13 @@ PARSERS: dict[str, ParserFunc] = {"csv": parse_csv, "jsonl": _parse_jsonl}
 
 
 def get_parser(fmt: str) -> ParserFunc:
+    """
+    Выбор парсера в зависимости от формата
+    Args:
+        fmt: формат парсера
+    Raises: если неподдерживаемый парсер, то падает с ошибкой неподдерживаемого формата
+    Returns: парсер
+    """
     try:
         return PARSERS[fmt]
     except KeyError as exc:

@@ -1,22 +1,22 @@
 class StreamStatsError(Exception):
-    """Main error"""
+    """Основная ошибка"""
 
 
 class EmptyFileError(StreamStatsError):
-    """Empty file error"""
+    """Ошибка пустого файла"""
 
 
 class UnsupportedFormatError(StreamStatsError):
-    """Invalid format"""
+    """Неподдерживаемый формат"""
 
 
 class InvalidEventError(StreamStatsError):
-    """Invalid event"""
+    """Недопустимое событие"""
 
 
 class InvalidTimestampError(InvalidEventError):
-    """Invalid time format"""
+    """Недопустимый формат времени"""
 
 
 class CLIConfigError(StreamStatsError):
-    """CLI config error"""
+    """Ошибка конфига CLI"""
