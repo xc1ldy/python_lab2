@@ -124,7 +124,7 @@ def _parse_csv_row(
     return _validate_event(dict(zip(header, row, strict=True)), path, line_no)
 
 
-def _parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
+def parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
     """
     Лениво читать события jsonl
     Args:
@@ -133,7 +133,7 @@ def _parse_jsonl(path: Path, on_error: OnError | None = None) -> Iterator[Event]
         без on_error - встречаем ошибочную строку -> падает с ошибкой формата события
         c on_error - запоминаем ошибку, читаем дальше
     Raises: файл без непустых строк падает с ошибкой пустого файла
-    Returns: список событий
+    Returns: генератор событий
     """
     has_content = False
     with path.open(encoding=ENCODING) as file:
@@ -163,7 +163,7 @@ def parse_csv(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
         c on_error - запоминаем ошибку, читаем дальше
     Raises: ошибка заголовка не пропускается даже с on_error,
             падает с ошибкой пустого файла
-    Returns: список событий
+    Returns: генератор событий
     """
     header: list[str] | None = None
     with path.open(encoding=ENCODING, newline="") as file:
@@ -183,11 +183,11 @@ def parse_csv(path: Path, on_error: OnError | None = None) -> Iterator[Event]:
                 on_error(exc)
                 continue
             yield event
-        if header is None:
-            raise EmptyFileError(f"{path}: file is empty")
+    if header is None:
+        raise EmptyFileError(f"{path}: file is empty")
 
 
-PARSERS: dict[str, ParserFunc] = {"csv": parse_csv, "jsonl": _parse_jsonl}
+PARSERS: dict[str, ParserFunc] = {"csv": parse_csv, "jsonl": parse_jsonl}
 
 
 def get_parser(fmt: str) -> ParserFunc:

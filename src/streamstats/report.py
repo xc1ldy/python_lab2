@@ -57,7 +57,7 @@ def write_report(report: dict[str, object], path: Path) -> None:
     Args:
         report: отчет
         path: путь к файлу для записи
-    Raises: None
-    Returns: отчет, записанный в файл
+    Raises: OSError, ловится в _emit
+    Returns: None
     """
     path.write_text(render_report(report) + "\n", encoding="utf-8")

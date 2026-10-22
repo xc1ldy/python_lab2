@@ -24,7 +24,7 @@ def _emit(report: dict[str, object], output: Path | None) -> None:
         report: отчет
         output: путь к файлу для вывода либо None, для вывода в stdout
     Raises: сообщение ошибки если не удается записать
-    Returns: вывод отчета в stdout или запись в файл
+    Returns: None
     """
     if output is None:
         typer.echo(render_report(report))
@@ -66,8 +66,8 @@ def analyze(
         fmt: формат ввода
         output: место вывода
         skip_invalid: флаг пропуска ошибочных строк
-    Raises: при ошибке, падает с общей ошибкой и отслеживает конкретную ошибку
-    Returns: сформированный отчет
+    Raises: падает с общей ошибкой, а выдает конкретное сообщение ошибки
+    Returns: None
     """
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
     try:

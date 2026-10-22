@@ -43,7 +43,7 @@ class StreamStats:
         Args:
             event: событие
         Raises: None
-        Returns: счетчики события
+        Returns: None
         """
         self.total += 1
         self.by_level[event.level] += 1
@@ -63,7 +63,7 @@ class StreamStats:
         Args:
             events: события
         Raises: None
-        Returns: счетчики событий
+        Returns: None
         """
         for event in events:
             self.add(event)
@@ -73,7 +73,7 @@ class StreamStats:
         Обработать пропущенную ошибочную строку
         Args: None
         Raises: None
-        Returns: счетчик пропущенных строк
+        Returns: None
         """
         self.skipped_lines += 1
 
@@ -103,14 +103,25 @@ def analyze_files(
      Args:
          paths: пути к файлам
          fmt: формат (один для всех файлов)
-         skip_invalid: пропускать пустые строки или нет
-    Raises: описывает ошибку в зависимости от того с какой ошибкой падает
-    Returns: статистику
+         skip_invalid: пропускать ошибочные строки или нет
+    Raises:
+        UnsupportedFormatError: неподдерживаемый формат
+        EmptyFileError: в файле нет ни одной непустой строки
+        InvalidEventError: ошибочная строка без skip_invalid или ошибка кодировки
+        CLIConfigError: не удалось прочитать файл
+    Returns: общая статистика по всем файлам
     """
     parser = get_parser(fmt)
     stats = StreamStats()
 
     def skip(error: InvalidEventError) -> None:
+        """
+        Пропуск ошибочных строк для on_error
+        Args:
+            error: ошибка с которой пропускаем строку
+        Raises: None
+        Returns: None
+        """
         logger.warning("Skipping invalid line: %s", error)
         stats.record_skipped()
 
