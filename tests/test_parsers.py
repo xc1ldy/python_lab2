@@ -18,25 +18,25 @@ BAD_LINES = {"jsonl": "this is not json\n", "csv": "only,three,fields\n"}
 EMPTY_FILES = [(fmt, text) for fmt in FORMATS for text in ["", "\n   \n\n"]]
 
 
-def write(tmp_path: Path, fmt:str, content:str | bytes) -> Path:
+def write(tmp_path: Path, fmt: str, content: str | bytes) -> Path:
     path = tmp_path / f"events.{fmt}"
     path.write_bytes(content.encode("utf-8") if isinstance(content, str) else content)
     return path
 
 
-def good_line(fmt:str, *, source: str = "api", message: str = "boom") -> str:
+def good_line(fmt: str, *, source: str = "api", message: str = "boom") -> str:
     if fmt == "jsonl":
         data = {"timestamp": TS, "level": "ERROR", "source": source, "message": message}
         return json.dumps(data, ensure_ascii=False) + "\n"
     return f"{TS},ERROR,{source},{message}\n"
 
 
-def build(fmt:str, *lines: str) -> str:
+def build(fmt: str, *lines: str) -> str:
     return (CSV_HEADER if fmt == "csv" else "") + "".join(lines)
 
 
 @pytest.mark.parametrize("fmt", FORMATS)
-def test_reads_valid_events(fmt:str, tmp_path: Path) -> None:
+def test_reads_valid_events(fmt: str, tmp_path: Path) -> None:
     text = build(fmt, good_line(fmt, source="api"), good_line(fmt, source="db"))
     events = list(get_parser(fmt)(write(tmp_path, fmt, text), None))
     assert [event.source for event in events] == ["api", "db"]
@@ -44,7 +44,7 @@ def test_reads_valid_events(fmt:str, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("fmt, content", EMPTY_FILES)
 def test_empty_file_raises_in_both_modes(
-        fmt:str, content: str, tmp_path: Path
+    fmt: str, content: str, tmp_path: Path
 ) -> None:
     path = write(tmp_path, fmt, content)
     parser = get_parser(fmt)
@@ -56,7 +56,7 @@ def test_empty_file_raises_in_both_modes(
 
 @pytest.mark.parametrize("fmt, bad_line_no", [("jsonl", 3), ("csv", 4)])
 def test_bad_line_stops_processing_by_default(
-        fmt:str, bad_line_no: int, tmp_path: Path
+    fmt: str, bad_line_no: int, tmp_path: Path
 ) -> None:
     text = build(fmt, good_line(fmt), "\n", BAD_LINES[fmt], good_line(fmt))
     path = write(tmp_path, fmt, text)
@@ -69,7 +69,7 @@ def test_bad_line_stops_processing_by_default(
 
 
 @pytest.mark.parametrize("fmt", FORMATS)
-def test_skip_mode_reports_bad_line(fmt:str, tmp_path: Path) -> None:
+def test_skip_mode_reports_bad_line(fmt: str, tmp_path: Path) -> None:
     text = build(fmt, good_line(fmt), BAD_LINES[fmt])
     errors: list[InvalidEventError] = []
 
@@ -85,7 +85,7 @@ def test_bad_timestamp_raises_timestamp_error(tmp_path: Path) -> None:
 
 
 def test_missing_timestamp_is_not_a_timestamp_error(tmp_path: Path) -> None:
-    line = json.dumps({"level":"ERROR", "source": "api", "message":"boom"}) + "\n"
+    line = json.dumps({"level": "ERROR", "source": "api", "message": "boom"}) + "\n"
 
     with pytest.raises(InvalidEventError) as exc_info:
         list(get_parser("jsonl")(write(tmp_path, "jsonl", line), None))
