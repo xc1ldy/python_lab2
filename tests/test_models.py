@@ -13,12 +13,13 @@ VALID = {
 }
 REQUIRED_FIELDS = list(VALID)
 
+
 def make_event(**overrides: object) -> Event:
     return Event.model_validate({**VALID, **overrides})
 
 
 @pytest.mark.parametrize(
-    "raw", "expected",
+    "raw, expected",
     [
         ("2026-09-01T12:00:00+03:00", datetime(2026, 9, 1, 9, 0, 0, tzinfo=UTC)),
         ("2026-09-01T12:00Z", datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)),
@@ -30,6 +31,7 @@ def test_timestamp_is_normalized_to_utc(raw: str, expected: datetime) -> None:
 
     assert timestamp == expected
     assert timestamp.utcoffset() == timedelta(0)
+
 
 @pytest.mark.parametrize("raw", ["вчера", "2026-09-01T00:00:00", 1714564800])
 def test_invalid_timestamp_is_rejected(raw: object) -> None:

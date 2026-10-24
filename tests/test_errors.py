@@ -9,6 +9,7 @@ from streamstats.errors import (
     UnsupportedFormatError,
 )
 
+
 @pytest.mark.parametrize(
     "error_class",
     [
@@ -17,7 +18,7 @@ from streamstats.errors import (
         InvalidTimestampError,
         CLIConfigError,
         EmptyFileError,
-    ]
+    ],
 )
 def test_every_error_inherits_from_base(error_class: type[Exception]) -> None:
     assert issubclass(error_class, StreamStatsError)
