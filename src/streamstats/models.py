@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated
@@ -28,16 +29,15 @@ class Event(BaseModel):
     @field_validator("timestamp", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: object) -> datetime:
-        """
-        Форматирование строки ISO 8601 к UTC
-        Args:
-            value: не форматированное время
-        Raises: ошибка если value не str
-        Returns: время в формате datetime
-        """
         if not isinstance(value, str):
             raise ValueError("Timestamp must be an ISO 8601 string")
-        parsed = datetime.fromisoformat(value)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=UTC)
-        return parsed.astimezone(UTC)
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", value):
+            return datetime.fromisoformat(value).replace(tzinfo=UTC)
+        has_timezone = value.endswith("Z") or bool(
+            re.search(r"[+-]\d{2}:\d{2}$", value)
+        )
+        if not has_timezone:
+            raise ValueError("Timestamp must include a timezone")
+
+        normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+        return datetime.fromisoformat(normalized).astimezone(UTC)

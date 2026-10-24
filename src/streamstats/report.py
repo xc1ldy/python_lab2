@@ -1,9 +1,26 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
 
 from streamstats.analysis import StreamStats
 from streamstats.models import Level
+
+
+class TopErrorSource(TypedDict):
+    source: str
+    count: int
+    critical: int
+
+
+class Report(TypedDict):
+    total: int
+    by_level: dict[str, int]
+    by_source: dict[str, int]
+    top_error_sources: list[TopErrorSource]
+    first_timestamp: str | None
+    last_timestamp: str | None
+    skipped_lines: int
 
 
 def _format_timestamp(value: datetime | None) -> str | None:
@@ -17,7 +34,7 @@ def _format_timestamp(value: datetime | None) -> str | None:
     return None if value is None else value.isoformat()
 
 
-def build_report(stats: StreamStats) -> dict[str, object]:
+def build_report(stats: StreamStats) -> Report:
     """
     Собрать структуру отчета из статистики
     Args:
@@ -26,12 +43,17 @@ def build_report(stats: StreamStats) -> dict[str, object]:
     Returns: отчет
     """
     by_source = sorted(stats.by_source.items(), key=lambda item: (-item[1], item[0]))
+
     return {
         "total": stats.total,
         "by_level": {level.value: stats.by_level[level] for level in Level},
         "by_source": dict(by_source),
         "top_error_sources": [
-            {"source": item.source, "count": item.total, "critical": item.critical}
+            {
+                "source": item.source,
+                "count": item.total,
+                "critical": item.critical,
+            }
             for item in stats.top_error_sources()
         ],
         "first_timestamp": _format_timestamp(stats.first_timestamp),
@@ -40,7 +62,7 @@ def build_report(stats: StreamStats) -> dict[str, object]:
     }
 
 
-def render_report(report: dict[str, object]) -> str:
+def render_report(report: Report) -> str:
     """
     Обернуть отчет в json
     Args:
@@ -51,7 +73,7 @@ def render_report(report: dict[str, object]) -> str:
     return json.dumps(report, ensure_ascii=False, indent=2)
 
 
-def write_report(report: dict[str, object], path: Path) -> None:
+def write_report(report: Report, path: Path) -> None:
     """
     Записать отчет в файл
     Args:

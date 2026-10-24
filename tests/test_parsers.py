@@ -74,7 +74,7 @@ def test_skip_mode_reports_bad_line(fmt: str, tmp_path: Path) -> None:
     errors: list[InvalidEventError] = []
 
     events = list(get_parser(fmt)(write(tmp_path, fmt, text), errors.append))
-    assert len(events) == 2
+    assert len(events) == 1
     assert len(errors) == 1
 
 

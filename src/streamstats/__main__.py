@@ -7,7 +7,7 @@ import typer
 from streamstats.analysis import analyze_files
 from streamstats.errors import CLIConfigError, StreamStatsError
 from streamstats.parsers import PARSERS
-from streamstats.report import build_report, render_report, write_report
+from streamstats.report import Report, build_report, render_report, write_report
 
 EXIT_ERROR = 2
 
@@ -17,7 +17,7 @@ app = typer.Typer(
 )
 
 
-def _emit(report: dict[str, object], output: Path | None) -> None:
+def _emit(report: Report, output: Path | None) -> None:
     """
     Вывод отчета в stdout или запись в файл
     Args:
@@ -29,6 +29,7 @@ def _emit(report: dict[str, object], output: Path | None) -> None:
     if output is None:
         typer.echo(render_report(report))
         return
+
     try:
         write_report(report, output)
     except OSError as exc:
@@ -70,6 +71,7 @@ def analyze(
     Returns: None
     """
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+
     try:
         stats = analyze_files(inputs, fmt, skip_invalid=skip_invalid)
         _emit(build_report(stats), output)
