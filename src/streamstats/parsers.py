@@ -16,7 +16,7 @@ from streamstats.models import Event
 OnError = Callable[[InvalidEventError], None]
 ParserFunc = Callable[[Path, OnError | None], Iterator[Event]]
 
-ENCODING = "utf-8"
+ENCODING = "utf-8-sig"
 REQUIRED_COLUMNS = ("timestamp", "level", "source", "message")
 
 
